@@ -3,9 +3,11 @@ import pyshark
 
 class PysharkCapture:
     # ------Preference (web interface, jsons output file and uds streams dict)---------#
-    webInterface = "wlx2cd05a2aaa7c"
-    output_file = "captured_packets.txt"
     udp_streams = dict()
+
+    def __init__(self, web_interface, text_output_file):
+        self.webInterface = web_interface
+        self.textOutputFile = text_output_file
 
     # ------When udp packet arrives, the key of the ip address of the other side in the packet, will be increased by 1-#
     # ------This will allow us to determine which stream is the one we are looking for                             ----#
@@ -22,7 +24,7 @@ class PysharkCapture:
 
     # ------Parsing and reformatting the data acquired from jsons and http requests------
     def handle_json_and_http(self, packet):
-        with open(self.output_file, 'a') as file:
+        with open(self.textOutputFile, 'a') as file:
             # file.write(f"Packet #{packet.number}\n")
             # file.write(f"Timestamp: {packet.sniff_timestamp}\n")
             # file.write(f"Length: {packet.length} bytes\n")
@@ -48,3 +50,4 @@ class PysharkCapture:
             print(f"An error occurred: {str(e)}")
             import traceback
             traceback.print_exc()
+
