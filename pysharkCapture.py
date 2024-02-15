@@ -14,25 +14,33 @@ class PysharkCapture:
     def handle_json_and_http(self, packet):
         with open(self.textOutputFile, 'a') as file:
             self.j += 1
-            # file.write(f"Packet #{packet.number}\n")
-            # file.write(f"Timestamp: {packet.sniff_timestamp}\n")
-            # file.write(f"Length: {packet.length} bytes\n")
-            # file.write(f"Packet--------------------------------------------------{packet}\n\n")
-            # # Find the target layer
-            for layer in packet.layers:
-                if layer.layer_name == "json":
-                    file.write(f"JSON Number { self.j }: \n{layer}\n")
-                    break
-                if layer.layer_name == "http2":
-                    file.write(f"httpo { self.j }: \n{layer}\n")
-                    print(packet.layers[-1])
+            print(packet.layers)
+            layer = packet.layers.http2
+            print(layer)
+            if len(packet.get_multiple_layers('http2')) != 1:
+                print("Http layers: ", len(packet.get_multiple_layers('http2')))
+
+        for layer in packet.layers:
+            print(f"LayerName: {layer.layer_name} ------- Fields: {layer.field_names} --------")
+
+            if layer.layer_name == "json":
+                # file.write(f"JSON Number { self.j }: \n{layer}\n")
+                break
+            if layer.layer_name == "http2":
+                print()
+                # # Check if the frame contains payload data
+                # if 'Raw' in frame:
+                #     raw_data = frame['Raw'].load
+                #     file.write(f"Raw Data: {raw_data}\n")
+                #     # You can further process or attempt to parse the JSON here
+
 
 
     # -----Initiates the whole process----- #
     def capture_and_handle(self):
         try:
             i = 0
-            capture = pyshark.LiveCapture(interface=self.webInterface, display_filter='json', use_json=True)
+            capture = pyshark.LiveCapture(interface=self.webInterface, display_filter='json')
             for packet in capture.sniff_continuously():  # Adjust packet_count as needed
                 self.handle_json_and_http(packet)
                 print("Shiittty i: ", i)
