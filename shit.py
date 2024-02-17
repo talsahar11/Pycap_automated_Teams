@@ -1,60 +1,58 @@
-import json
-import subprocess
+import tkinter as tk
 import threading
+from time import sleep
 
-interface = "wlx2cd05a2aaa7c"  # Replace with your network interface
-pcap_output_file_template = "pcaps/shit.pcap"  # Template for naming pcap files
-capture_interval = 10  # Interval in seconds for capturing
+class InfoWindow:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("Information Window")
 
-def live_capture():
-    output_file = "output.txt"  # File to redirect stdout to
-    command = ['tshark', '-i', interface, '-w', pcap_output_file_template, '-f', 'tcp or udp', "-V", "-T", "json"]
-    with open(output_file, "w") as f:
-        subprocess.run(command, check=True, stdout=f)
+        self.jsons_label = tk.Label(self.root, text="Number of jsons catched: 0")
+        self.jsons_label.pack(padx=10, pady=5)
 
-def main():
-    # Start scheduled capture process
-    capture_thread = threading.Thread(target=live_capture)
-    capture_thread.start()
-    command = ['java', '-jar', "automate_login.jar"]
-    subprocess.run(command, check=True)
+        self.participants_label = tk.Label(self.root, text="Number of participants: 0")
+        self.participants_label.pack(padx=10, pady=5)
 
-def analyze_text_file(file_path):
-    json_started = False
-    json_lines = []
-    json_indentation = 0
-    with open("stripped_jsons", 'w') as jsonFile:
-        with open(file_path, 'r') as file:
-            for line in file:
-                # Count leading whitespace characters to determine indentation level
-                indentation = len(line) - len(line.lstrip())
+        self.cameras_label = tk.Label(self.root, text="Number of cameras: 0")
+        self.cameras_label.pack(padx=10, pady=5)
 
-                # Strip whitespace from the beginning and end of the line
-                stripped_line = line.strip()
+        self.mics_label = tk.Label(self.root, text="Number of mics: 0")
+        self.mics_label.pack(padx=10, pady=5)
 
-                # Check if the line contains '"json": {'
-                if stripped_line == '"json": {':
-                    json_started = True
-                    json_lines.append(line)
-                    json_indentation = indentation
-                    continue  # Skip to the next line
+        self.sharing_label = tk.Label(self.root, text="Is sharing: False")
+        self.sharing_label.pack(padx=10, pady=5)
 
-                # If JSON parsing has started, append the line to json_lines
-                if json_started:
-                    json_lines.append(line)
+        self.close_button = tk.Button(self.root, text="Close", command=self.close_window)
+        self.close_button.pack(pady=10)
 
-                    # Check if the line contains a closing '}'
-                    if stripped_line == '}' or stripped_line == '},':
-                        # Check if the indentation level is the same as the opening '"json": {'
-                        if indentation == json_indentation:
-                            # Join the json_lines and print the result
-                            json_string = ''.join(json_lines)
-                            jsonFile.write(json_string)
-    
-                            # Reset variables for the next JSON block
-                            json_started = False
-                            json_lines = []
+    def update_info(self, jsons, participants, cameras, mics, sharing):
+        self.jsons_label.config(text=f"Number of jsons catched: {jsons}")
+        self.participants_label.config(text=f"Number of participants: {participants}")
+        self.cameras_label.config(text=f"Number of cameras: {cameras}")
+        self.mics_label.config(text=f"Number of mics: {mics}")
+        self.sharing_label.config(text=f"Is sharing: {sharing}")
 
-if __name__ == "__main__":
-    analyze_text_file("output.txt")
+    def close_window(self):
+        self.root.destroy()
 
+    def run(self):
+        self.root.mainloop()
+
+# Function to update information
+def update_information(window):
+    jsons = 10
+    participants = 5
+    cameras = 3
+    mics = 2
+    sharing = True
+    window.update_info(jsons, participants, cameras, mics, sharing)
+
+# Create the Tkinter window
+window = InfoWindow()
+
+# Create a thread to update information
+thread = threading.Thread(target=update_information, args=(window,))
+thread.start()
+
+# Run the Tkinter window
+window.run()
