@@ -1,4 +1,7 @@
+import json
+import select
 import string
+import traceback
 from time import sleep
 
 
@@ -22,13 +25,13 @@ class JsonStripper:
         with open(self.output_file, 'w') as jsonsFile:
             with open(self.input_file, 'r') as file:
                 while self.__isRunning:
-                    where = file.tell()  # Get current file position
-                    line = file.readline()
-                    print(f"Nothing stripped: {where}")
-                    if not line:
-                        sleep(0.1)
-                        file.seek(where)
-                    else:
+                    read_ready, write_ready, error_ready = select.select([file], [], [])
+                    if file in read_ready:
+                        try:
+                            line = file.readline()
+                        except Exception as e:
+                            print(line)
+                            traceback.print_exc()
                         # Count leading whitespace characters to determine indentation level
                         indentation = len(line) - len(line.lstrip())
 
@@ -46,8 +49,6 @@ class JsonStripper:
                         # If JSON parsing has started, append the line to json_lines
                         if json_started:
                             json_lines.append(line)
-                            print("FOund shitty json")
-
                             # Check if the line contains a closing '}'
                             if stripped_line == '}' or stripped_line == '},':
                                 # Check if the indentation level is the same as the opening '"json": {'
@@ -55,7 +56,6 @@ class JsonStripper:
                                     # Join the json_lines and print the result
                                     json_string = ''.join(json_lines)
                                     jsonsFile.write(json_string)
-
                                     # Reset variables for the next JSON block
                                     json_started = False
                                     json_lines = []

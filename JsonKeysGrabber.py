@@ -1,3 +1,5 @@
+import logging
+import select
 import string
 from time import sleep
 
@@ -12,20 +14,30 @@ class JsonKeysGrabber:
 
     def start(self):
         self.isRunning = True
+        foundPairs = list()
+        current_val = None
         with open(self.input_file, 'r') as file:
             while self.isRunning:
-                where = file.tell()
+                read_ready, write_ready, error_ready = select.select([file], [], [])
                 line = file.readline()
-                if not line:
-                    sleep(1)
-                    file.seek(where)
-                else:
-                    if isKeyLine(line):
-                        print(extractKey(line))
+                if file in read_ready:
+                    if isValueLine(line):
+                        current_val = extractKey(line)
+                    elif isKeyLine(line):
+                        if current_val is None:
+                            logging.error(f"key without a michse: {extractKey(line)}")
+                        else:
+                            foundPairs.append((extractKey(line), current_val))
+                            print(foundPairs.pop(len(foundPairs) - 1))
+                            current_val = None
 
 
 def isKeyLine(line):
     return "json.key" in line
+
+
+def isValueLine(line):
+    return "json.value" in line
 
 
 def extractKey(line: string):

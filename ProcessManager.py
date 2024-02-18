@@ -4,6 +4,7 @@ import subprocess
 import multiprocessing
 import threading
 import sys
+import traceback
 
 from JsonKeysGrabber import JsonKeysGrabber
 from JsonStripper import JsonStripper
@@ -50,7 +51,8 @@ class ProcessManager:
             stripper = JsonStripper(tshark_output_file, json_stripper_output_file)
             stripper.run()
         except Exception as e:
-            print("Something wrong with the json stripper")
+            print(f"Something wrong with the json stripper, Error: {traceback.print_exc()}")
+            self.shutdown()
 
     def __runJsonKeysGrabber(self):
         try:
